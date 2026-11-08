@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Home Assistant for webOS</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; }
+    body {
+      display: flex; align-items: center; justify-content: center;
+      background: radial-gradient(circle at 30% 20%, #163c5b 0%, #101b2a 56%, #0a101a 100%);
+      color: #f4f8ff; font: 26px/1.4 Arial, Helvetica, sans-serif;
+    }
+    main { width: min(88vw, 990px); padding: 64px 74px; border: 2px solid #32516a;
+      border-radius: 26px; background: rgba(13, 27, 43, 0.95); }
+    .brand { display:flex; align-items:center; gap:24px; margin-bottom: 20px; }
+    .brand img { width:90px; height:90px; border-radius:18px; }
+    h1 { font-size: 48px; line-height:1.1; font-weight:700; margin:0; }
+    p { color:#cad9e7; margin: 12px 0 28px; }
+    label { display:block; margin-bottom:12px; font-size:24px; font-weight:bold; }
+    input { display:block; width:100%; border:2px solid #67839a; background:#081522;
+      border-radius:12px; color:white; font-size:30px; padding:19px; outline:none; }
+    input:focus { border-color:#48baff; box-shadow:0 0 0 5px rgba(72,186,255,.2); }
+    .buttons { display:flex; flex-wrap:wrap; gap:20px; margin-top:28px; }
+    button { border:0; border-radius:12px; padding:19px 28px; background:#1489c9;
+      color:white; cursor:pointer; font-size:27px; font-weight:bold; min-height:74px; }
+    button.secondary { background:#34536d; }
+    button:focus, button:hover { outline:4px solid #a0e0ff; outline-offset:4px; }
+    .hint { margin-top:26px; font-size:19px; color:#a6b9c9; }
+    .address { overflow-wrap:anywhere; color:#f4f8ff; font-weight:bold; }
+    .error { margin-top:18px; min-height:27px; font-size:23px; color:#ffb4a5; }
+    [hidden] { display:none !important; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="brand"><img src="largeIcon.png" alt=""><h1>Home Assistant</h1></div>
+    <section id="setup">
+      <p>Enter the address of your Home Assistant server. The address is stored only on this TV.</p>
+      <form id="form">
+        <label for="url">Home Assistant URL</label>
+        <input id="url" type="url" inputmode="url" autocomplete="off" spellcheck="false"
+               placeholder="http://192.168.1.10:8123" required>
+        <div class="buttons"><button type="submit">Save and open</button></div>
+      </form>
+      <div id="error" class="error" role="alert" aria-live="polite"></div>
+      <div class="hint">Use a reachable http:// or https:// address. You'll sign in directly on Home Assistant.</div>
+    </section>
+    <section id="launch" hidden>
+      <p>Saved address: <span id="savedAddress" class="address"></span></p>
+      <p id="countdown">Opening Home Assistant...</p>
+      <div class="buttons">
+        <button id="open" type="button">Open now</button>
+        <button id="settings" type="button" class="secondary">Settings</button>
+      </div>
+      <div class="hint">To change the URL, reopen this app and select Settings before the countdown ends.<br>
+      To enable improved scrolling, install the included Home Assistant TV scroll helper on your Home Assistant server.</div>
+    </section>
+  </main>
+  <script>
+    (function () {
+      'use strict';
+      // Keep this key unchanged when upgrading: existing installations retain their URL.
+      var KEY = 'homeassistant.webos.url.v1';
+      var setup = document.getElementById('setup');
+      var launch = document.getElementById('launch');
+      var field = document.getElementById('url');
+      var error = document.getElementById('error');
+      var timer = null;
+      var remaining = 5;
+      var stored = '';
+      try { stored = window.localStorage.getItem(KEY) || ''; } catch (e) { /* storage may be unavailable */ }
+
+      function validate(value) {
+        try {
+          var uri = new URL(value.trim());
+          if (uri.protocol !== 'http:' && uri.protocol !== 'https:') return '';
+          if (!uri.hostname || uri.username || uri.password) return '';
+          return uri.href;
+        } catch (e) { return ''; }
+      }
+      function stop() {
+        if (timer !== null) { window.clearInterval(timer); timer = null; }
+      }
+      function showSetup() {
+        stop(); launch.hidden = true; setup.hidden = false;
+        field.value = stored; error.textContent = '';
+        document.getElementById('countdown').textContent = 'Automatic launch disabled.';
+        field.focus();
+      }
+      function openHomeAssistant() {
+        stop();
+        var value = validate(stored);
+        if (!value) { showSetup(); return; }
+        // Top-level navigation preserves Home Assistant login and avoids iframe CSP restrictions.
+        window.location.replace(value);
+      }
+      function showLaunch() {
+        if (!validate(stored)) { showSetup(); return; }
+        setup.hidden = true; launch.hidden = false;
+        document.getElementById('savedAddress').textContent = stored;
+        remaining = 5;
+        document.getElementById('countdown').textContent = 'Opening automatically in ' + remaining + ' seconds';
+        document.getElementById('settings').focus();
+        stop();
+        timer = window.setInterval(function () {
+          remaining -= 1;
+          if (remaining <= 0) { openHomeAssistant(); return; }
+          document.getElementById('countdown').textContent = 'Opening automatically in ' + remaining + ' seconds';
+        }, 1000);
+      }
+      document.getElementById('form').addEventListener('submit', function (event) {
+        event.preventDefault();
+        var value = validate(field.value);
+        if (!value) {
+          error.textContent = 'Enter a valid http:// or https:// URL without a username or password.';
+          return;
+        }
+        stored = value;
+        try { window.localStorage.setItem(KEY, value); } catch (e) {
+          error.textContent = 'Unable to save the URL locally. Check TV storage settings.';
+          return;
+        }
+        openHomeAssistant();
+      });
+      document.getElementById('open').addEventListener('click', openHomeAssistant);
+      document.getElementById('settings').addEventListener('click', showSetup);
+      document.addEventListener('keydown', function (event) {
+        if (launch.hidden || timer === null) return;
+        if (event.keyCode !== 461) {
+          stop();
+          document.getElementById('countdown').textContent = 'Automatic launch paused.';
+        }
+      });
+      if (validate(stored)) showLaunch(); else showSetup();
+    }());
+  </script>
+</body>
+</html>
