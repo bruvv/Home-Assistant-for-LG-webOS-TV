@@ -40,6 +40,26 @@ In Home Assistant, open your user profile and set **Language** to **English**. T
 
 The TV's built-in Chromium/webOS renderer manages hardware compositing. A webOS IPK cannot force GPU acceleration on a remote website with a supported app manifest option. This build avoids extra rendering layers and animations; it does not claim faster GPU rendering. The optional helper modifies only input/scroll behavior.
 
+## Downloads and releases
+
+Download the IPK and optional `ha-tv-scroll.js` from the
+[latest release](https://github.com/bruvv/Home-Assistant-for-LG-webOS-TV/releases/latest).
+See [CHANGELOG.md](CHANGELOG.md) for release notes.
+
+GitHub Actions builds and checks the package on pushes to `main` and pull
+requests. Each run uploads the IPK as a workflow artifact. A successful build
+on `main` automatically publishes a release if the version has not been
+released yet; manual workflow runs on `main` can retry a failed release.
+
+To release a new version:
+
+1. Bump `version` in `app/appinfo.json` (numeric `major.minor.patch`).
+2. Add a matching `## [major.minor.patch] - YYYY-MM-DD` entry to `CHANGELOG.md`
+   and update versioned filenames in this README.
+3. Push to `main`. The workflow creates the `vmajor.minor.patch` tag and release
+   with that changelog entry, the IPK, and the scrolling helper. Existing
+   releases are left unchanged.
+
 ## Rebuild on macOS
 
 Only Python 3 is required; the build script uses the standard library:
