@@ -76,8 +76,7 @@ jobs:
             --jq '.[].tag_name' > released-tags.txt
           if grep -Fxq "v$VERSION" released-tags.txt; then
             echo "v$VERSION is already released."
-            exit 0
-          fi
+          else
           python build.py
           python - <<'PY'
           import json
@@ -93,3 +92,24 @@ jobs:
           gh release create "v$VERSION" ./*.ipk home-assistant/ha-tv-scroll.js \
             --target "$GITHUB_SHA" --title "v$VERSION" \
             --notes-file release-notes.md
+          fi
+      - name: Update Glasshouse catalog from published IPK
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          VERSION=$(python - <<'PY'
+          import json
+          print(json.load(open('app/appinfo.json'))['version'])
+          PY
+          )
+          gh release download "v$VERSION" --pattern '*.ipk' --clobber
+          python catalog.py ./*.ipk
+          if ! git diff --quiet -- repo.json; then
+            git config user.name 'github-actions[bot]'
+            git config user.email \
+              '41898282+github-actions[bot]@users.noreply.github.com'
+            git add repo.json
+            git commit -m "Update Glasshouse catalog for v$VERSION"
+            git push origin HEAD:main
+          fi

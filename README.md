@@ -4,6 +4,32 @@ Unofficial fullscreen Home Assistant launcher for rooted LG webOS TVs. Interface
 
 ## 1. Update the TV app
 
+### Install and track updates through Glasshouse
+
+In your TV's Glasshouse dashboard, open **Apps**, find **Catalogs**, and add:
+
+```text
+https://github.com/bruvv/Home-Assistant-for-LG-webOS-TV
+```
+
+Glasshouse resolves this to the repository's `repo.json` catalog. Home Assistant
+will appear alongside apps from other custom catalogs, and Glasshouse checks
+its version against the installed app to show available updates. This does not
+add the app to the official Homebrew Channel catalog or enable unattended
+installation. Follow Glasshouse's prompts to install or update it.
+
+If you need the direct catalog address, use:
+
+```text
+https://raw.githubusercontent.com/bruvv/Home-Assistant-for-LG-webOS-TV/HEAD/repo.json
+```
+
+The catalog includes the published IPK's SHA-256 and is refreshed by the release
+workflow. The optional Home Assistant-side scrolling helper still needs the
+separate setup below; updating the TV app does not update that helper.
+
+### Alternatively, install the IPK manually
+
 1. Open your TV's Glasshouse web dashboard on your computer.
 2. In **Apps**, use **Install from a file** and select `nl.local.homeassistanttv_1.1.0_all.ipk`.
 3. Launch **Home Assistant**. Your saved URL should survive the upgrade because the package ID and localStorage key are unchanged. If it doesn't, enter the URL again.
@@ -58,7 +84,10 @@ To release a new version:
    and update versioned filenames in this README.
 3. Push to `main`. The workflow creates the `vmajor.minor.patch` tag and release
    with that changelog entry, the IPK, and the scrolling helper. Existing
-   releases are left unchanged.
+   releases are left unchanged. It then downloads the published IPK and updates
+   `repo.json` with its version, URL, size, and SHA-256, committing the catalog
+   back to `main`. A manual workflow run can refresh the catalog for an existing
+   release without replacing its assets.
 
 ## Rebuild on macOS
 

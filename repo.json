@@ -1,0 +1,23 @@
+{
+  "packages": [
+    {
+      "id": "nl.local.homeassistanttv",
+      "title": "Home Assistant",
+      "shortDescription": "Home Assistant fullscreen launcher for LG webOS TV (English UI)",
+      "iconUri": "https://raw.githubusercontent.com/bruvv/Home-Assistant-for-LG-webOS-TV/v1.1.0/app/icon.png",
+      "manifest": {
+        "id": "nl.local.homeassistanttv",
+        "version": "1.1.0",
+        "title": "Home Assistant",
+        "appDescription": "Home Assistant fullscreen launcher for LG webOS TV (English UI)",
+        "iconUri": "https://raw.githubusercontent.com/bruvv/Home-Assistant-for-LG-webOS-TV/v1.1.0/app/icon.png",
+        "sourceUrl": "https://github.com/bruvv/Home-Assistant-for-LG-webOS-TV",
+        "ipkUrl": "https://github.com/bruvv/Home-Assistant-for-LG-webOS-TV/releases/download/v1.1.0/nl.local.homeassistanttv_1.1.0_all.ipk",
+        "ipkHash": {
+          "sha256": "2fd62079187dc713d85ea0f3a6b9db7efa528803d204d9fc76ec1e86ded33404"
+        },
+        "ipkSize": 4834
+      }
+    }
+  ]
+}
